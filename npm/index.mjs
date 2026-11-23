@@ -1,4 +1,4 @@
-// outbid-receipt-verify (draft, name TBD): zero-dependency verifier for Outbid-Receipt v1 (spec rev B).
+// outbid-receipt-verify: zero-dependency verifier for Outbid-Receipt v1 (spec rev B).
 // The verifier section is receipt-ref.mjs from the spec folder, unchanged except this header.
 // verifyReceipt() and splitSseReceipt() answer { ok: false, reason } on any input and never throw.
 // verifyReceipt() and splitSseReceipt() answer { ok: false, reason } on any input and never throw.
