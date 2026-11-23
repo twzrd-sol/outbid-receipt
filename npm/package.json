@@ -1,0 +1,32 @@
+{
+  "name": "outbid-receipt-verify",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Zero-dependency offline verifier for Outbid-Receipt v1 seller-signed delivery receipts.",
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test.mjs"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/twzrd-sol/outbid-receipt.git",
+    "directory": "npm"
+  },
+  "homepage": "https://github.com/twzrd-sol/outbid-receipt#readme",
+  "bugs": {
+    "url": "https://github.com/twzrd-sol/outbid-receipt/issues"
+  }
+}
