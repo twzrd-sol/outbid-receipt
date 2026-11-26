@@ -1,0 +1,44 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node:
+    name: npm verifier (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Every file in vectors/ is valid JSON and has a runner
+        # npm/test.mjs reads these two files by name. A new vector file fails here until a runner covers it.
+        run: |
+          node -e '
+            const fs = require("fs");
+            const covered = new Set(["receipt-vectors.json", "receipt-fixture-live-20261123.json"]);
+            const files = fs.readdirSync("vectors").sort();
+            let bad = 0;
+            for (const f of files) {
+              try { JSON.parse(fs.readFileSync("vectors/" + f, "utf8")); } catch (e) { console.error("invalid JSON: " + f + ": " + e.message); bad++; continue; }
+              if (!covered.has(f)) { console.error("no runner covers vectors/" + f); bad++; }
+            }
+            for (const f of covered) if (!files.includes(f)) { console.error("missing vectors/" + f); bad++; }
+            console.log("vectors/: " + files.length + " files, " + bad + " problems");
+            process.exit(bad ? 1 : 0);
+          '
+      - name: npm/test.mjs (all vectors + live fixture + fetch wrapper)
+        working-directory: npm
+        run: node --test test.mjs
