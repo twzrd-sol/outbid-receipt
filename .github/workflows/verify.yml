@@ -24,11 +24,11 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Every file in vectors/ is valid JSON and has a runner
-        # npm/test.mjs reads these two files by name. A new vector file fails here until a runner covers it.
+        # npm/test.mjs reads these files by name. A new vector file fails here until a runner covers it.
         run: |
           node -e '
             const fs = require("fs");
-            const covered = new Set(["receipt-vectors.json", "receipt-fixture-live-20261123.json"]);
+            const covered = new Set(["receipt-vectors.json", "receipt-fixture-live-20261123.json", "receipt-negative-vectors.json"]);
             const files = fs.readdirSync("vectors").sort();
             let bad = 0;
             for (const f of files) {
@@ -39,6 +39,8 @@ jobs:
             console.log("vectors/: " + files.length + " files, " + bad + " problems");
             process.exit(bad ? 1 : 0);
           '
+      - name: vectors/receipt-negative-vectors.json matches its generator
+        run: node reference/gen-negative-vectors.mjs --check
       - name: npm/test.mjs (all vectors + live fixture + fetch wrapper)
         working-directory: npm
         run: node --test test.mjs

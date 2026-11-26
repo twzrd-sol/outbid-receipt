@@ -7,10 +7,11 @@ import { verifyReceipt, splitSseReceipt, withReceiptVerification, KEYS_PATH } fr
 const dir = new URL(process.env.RECEIPT_VECTORS_DIR ? 'file://' + process.env.RECEIPT_VECTORS_DIR.replace(/\/?$/, '/') : '../vectors/', import.meta.url);
 const V = JSON.parse(readFileSync(new URL('receipt-vectors.json', dir), 'utf8'));
 const F = JSON.parse(readFileSync(new URL('receipt-fixture-live-20261123.json', dir), 'utf8'));
+const N = JSON.parse(readFileSync(new URL('receipt-negative-vectors.json', dir), 'utf8'));
 const utf8 = (s) => Buffer.from(s, 'utf8');
 
-function optsFor(c) {
-  const d = V.defaults, w = c.with || {};
+function optsFor(c, doc = V) {
+  const d = doc.defaults, w = c.with || {};
   const e = { ...d.expect, ...(w.expect || {}) };
   for (const k of w.expect_remove || []) delete e[k];
   return {
@@ -19,8 +20,8 @@ function optsFor(c) {
   };
 }
 
-function runCase(c) {
-  const { e, ...o } = optsFor(c);
+function runCase(c, doc = V) {
+  const { e, ...o } = optsFor(c, doc);
   let token = c.token, body = e.body_utf8 === undefined ? undefined : utf8(e.body_utf8);
   if (c.stream_utf8 !== undefined) {
     const s = splitSseReceipt(utf8(c.stream_utf8));
@@ -38,6 +39,16 @@ for (const c of V.cases) {
   test('vector ' + c.name, () => {
     const r = runCase(c);
     if (c.expected.ok) assert.equal(r.ok, true, JSON.stringify(r));
+    else assert.deepEqual({ ok: r.ok, reason: r.reason }, { ok: false, reason: c.expected.reason });
+  });
+}
+
+// receipt-negative-vectors.json: a case with reason_undefined_by_spec passes on any refusal (SPEC.md names no reason).
+for (const c of N.cases) {
+  test('negative vector ' + c.name, () => {
+    const r = runCase(c, N);
+    if (c.expected.ok) assert.equal(r.ok, true, JSON.stringify(r));
+    else if (c.expected.reason_undefined_by_spec) assert.equal(r.ok, false, JSON.stringify(r));
     else assert.deepEqual({ ok: r.ok, reason: r.reason }, { ok: false, reason: c.expected.reason });
   });
 }
