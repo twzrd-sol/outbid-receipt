@@ -76,7 +76,11 @@ export function signReceipt(fields, privateKey) {
   }
 }
 
-const validKey = (k) => isObj(k) && FORMAT.kid(k.kid) && k.kty === 'OKP' && k.crv === 'Ed25519' && isStr(k.x) && /^[A-Za-z0-9_-]{43}$/.test(k.x);
+// not_before and retired_at are Unix seconds or null (absent reads as null). Any other value refuses the key set:
+// read as "no bound", a retired_at written as a date string or a float would let a retired key verify.
+const validBound = (v) => v === null || v === undefined || (Number.isSafeInteger(v) && v >= 0);
+const validKey = (k) => isObj(k) && FORMAT.kid(k.kid) && k.kty === 'OKP' && k.crv === 'Ed25519' && isStr(k.x) && /^[A-Za-z0-9_-]{43}$/.test(k.x)
+  && validBound(k.not_before) && validBound(k.retired_at);
 const publicKey = (x) => crypto.createPublicKey({ key: Buffer.concat([SPKI_PREFIX, Buffer.from(x, 'base64url')]), format: 'der', type: 'spki' });
 
 /**
